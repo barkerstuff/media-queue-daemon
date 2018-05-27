@@ -1,0 +1,2 @@
+# media-queue-daemon
+A python daemon that is intended to receive URLs and apply some sort of logic to sort them and send them to a designated media player.  The idea behind this is to solve the problem with podcast aggregators that are not playlist aware and just simply send a series of individual links and launch a number of indivual media player instances.  With media-queue-daemon an accompanying client receives all output from the aggregator and then sends it to the daemon, which parses everything and forms neat ordered playlists for interpretation by a media player.

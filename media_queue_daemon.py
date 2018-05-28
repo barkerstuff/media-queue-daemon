@@ -17,8 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import sys
-import socket
+from socket import socket
+from socket import AF_INET
+from socket import SOCK_DGRAM
 from time import time
 from time import mktime
 import subprocess
@@ -295,7 +296,7 @@ def call_mpv():
 # This just binds the UDP socket
 def bind_socket():
     # Create a UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = socket(AF_INET, SOCK_DGRAM)
     s.bind((listen_ip,listen_port))
     return s
 

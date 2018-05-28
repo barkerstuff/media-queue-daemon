@@ -288,8 +288,8 @@ def call_mpv():
     # Send the list to mpv
     urls = " ".join(url_list)
     subprocess_string = "i3 exec \"mpv --no-terminal --title='gPodder mpv video stream' -af acompressor=threshold=-27dB:ratio=4:attack=10:release=100:makeup=4 --player-operation-mode=pseudo-gui -- " + urls + "\""
-    print(subprocess_string)
-    subprocess.call(subprocess_string,shell=True)
+    print('\n',subprocess_string)
+    subprocess.call(subprocess_string,shell=True); print()
 
 
 # This just binds the UDP socket

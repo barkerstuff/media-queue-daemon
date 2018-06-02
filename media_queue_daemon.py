@@ -59,7 +59,8 @@ parser = argparse.ArgumentParser(description="A daemon that listens for incoming
 
 # Add the arguments to the parser
 parser.add_argument('--disable_directory_recursion','-d',action='store_true',help="If directories are given to the daemon then it will recurse into them and find relevant media links")
-parser.add_argument('--notify_on_enumerate','-n',action='store_true',help='If directories are being enumerated then send a notification of the delay')
+parser.add_argument('--notify_queue_daemon','-q',action='store_true',help='Notifies via notify_queue_daemon')
+parser.add_argument('--notify_osd','-o',action='store_true',help='Notifies via notifyosd')
 
 # Create the parser
 args = parser.parse_args()
@@ -177,7 +178,8 @@ def call_mpv():
             try:
                 published_date = re.findall(r'[0-9]{4}-[0-9]{2}-[0-9]{2}',p.content.decode('utf-8'))[0]
             except Exception:
-                print('No published date found')
+                print('No published date found.  Assuming today')
+                published_date = str(date.today())
 
             year = published_date.split('-')[0]
             month = published_date.split('-')[1]
@@ -197,7 +199,11 @@ def call_mpv():
             threads.append(threading.Thread(target=target,args=(i,j)))
             # Launch the thread
             print('Starting thread')
-            threads[i].start()
+
+            try:
+                threads[i].start()
+            except:
+                print('Couldn\'t start thread')
 
         # MAIN PART OF find_media()
         notified = False
@@ -210,8 +216,11 @@ def call_mpv():
             if url_list[i].endswith('/') and not args.disable_directory_recursion:
                 if directory_mode == False:
                     print('{0} is a directory.  Entering into it'.format(i))
-                if args.notify_on_enumerate:
+                if args.notify_osd:
                     subprocess.call(['notify-send','Directories passed to the media_queue_daemon.  Standby for enumeration'])
+                    notified = True
+                elif args.notify_queue_daemon:
+                    subprocess.call(['notify_queue_client.py','-m','Enumerating videos'])
                     notified = True
                 directory_mode = True
                 create_threads(make_request_directories,i,j)
@@ -290,8 +299,21 @@ def call_mpv():
     urls = " ".join(url_list)
     subprocess_string = "i3 exec \"mpv --no-terminal --title='gPodder mpv video stream' -af acompressor=threshold=-27dB:ratio=4:attack=10:release=100:makeup=4 --player-operation-mode=pseudo-gui -- " + urls + "\""
     print('\n',subprocess_string)
-    subprocess.call(subprocess_string,shell=True); print()
 
+    # Notify before launching mpv
+    if args.notify_queue_daemon:
+        subprocess.call(['notify_queue_client.py','-m','Calling mpv'])
+    if args.notify_osd:
+        subprocess.call(['notify-osd','Calling mpv'])
+
+    # Call mpv and notify on successful return if set
+    try:
+        subprocess.call(subprocess_string,shell=True); print()
+    except:
+        if args.notify_queue_daemon:
+            subprocess.call(['notify_queue_client','-m','Call to mpv failed'])
+        if args.notify_osd:
+            subprocess.call(['notify-osd','Call to mpv failed'])
 
 # This just binds the UDP socket
 def bind_socket():
